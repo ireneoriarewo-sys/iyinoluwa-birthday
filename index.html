@@ -344,6 +344,53 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
 
+            <!-- Pre-Password City Selector Stage (Gift 2) -->
+<div id="modalCityChoiceState" class="hidden">
+    <div class="text-center mb-4">
+        <div class="w-14 h-14 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mx-auto text-xl mb-2">
+            <i class="fa-solid fa-map-location-dot"></i>
+        </div>
+        <h3 class="font-heading text-xl font-bold text-gray-800">Choose Your City! ✈️</h3>
+        <p class="text-xs text-gray-500 mt-1">Gift #002 Preview & Location</p>
+    </div>
+
+    <div class="bg-purple-50/90 rounded-2xl p-4 border border-purple-200 text-left space-y-3 mb-5">
+        <p class="text-xs font-bold text-purple-900 leading-relaxed">
+            ✨ This activity takes a few hours of your day, but we promise it’s totally worth it! Knowing your schedule, where would you prefer to do this?
+        </p>
+        
+        <div class="grid grid-cols-2 gap-3 pt-1">
+            <button onclick="selectCityPrePass('Lagos')" id="btn-pre-lagos" class="py-2.5 px-3 rounded-xl bg-white hover:bg-purple-100 text-gray-700 font-bold text-xs transition-all flex items-center justify-center gap-1.5 border border-purple-200 shadow-sm">
+                Lagos 🌴
+            </button>
+            <button onclick="selectCityPrePass('Abuja')" id="btn-pre-abuja" class="py-2.5 px-3 rounded-xl bg-white hover:bg-purple-100 text-gray-700 font-bold text-xs transition-all flex items-center justify-center gap-1.5 border border-purple-200 shadow-sm">
+                Abuja 🏙️
+            </button>
+        </div>
+
+        <!-- Are You Sure Confirmation Box -->
+        <div id="confirmBox" class="hidden bg-amber-50 rounded-xl p-3 border border-amber-200 mt-3 text-center space-y-2">
+            <p class="text-xs font-bold text-amber-800" id="confirmText">Are you sure about your choice?</p>
+            <div class="flex gap-2 justify-center">
+                <button onclick="confirmCitySelection()" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-lg shadow">
+                    Yes, I'm Sure! ✅
+                </button>
+                <button onclick="cancelCitySelection()" class="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-xs rounded-lg">
+                    Let me re-think
+                </button>
+            </div>
+        </div>
+
+        <p id="selectionFeedback" class="text-[11px] text-purple-700 font-semibold italic pt-2 text-center border-t border-purple-200">
+            👉 Click a city above to confirm your preferred location!
+        </p>
+    </div>
+
+    <button id="proceedPassBtn" onclick="proceedToPasswordState()" class="w-full py-2.5 bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold rounded-xl shadow text-xs transition-all flex items-center justify-center gap-2 opacity-50 cursor-not-allowed" disabled>
+        <span>Confirm Selection to Unlock Password 🔒</span>
+    </button>
+</div>
+
             <!-- Password Entry State -->
             <div id="modalLockState">
                 <div class="text-center mb-4">
@@ -455,9 +502,21 @@
                 tease: "You strictly banned this gift because you’re too picky… but we promised you’d get one whether you liked it or not.",
                 title: "DIY Perfume Creation Date 🧪🌸✨",
                 description: "You made sure to warn everyone: 'Please don’t buy me perfume, I’m way too picky!' 😤 And remember how we kept saying we’d buy you one anyway and you’d have no choice but to love it? Well, here’s the plot twist... You’re making it yourself! We booked a perfume date so you can mix, match, and create your exact signature scent.",
-                venue: "The Scent Bar by Mide, 38 Olonade street, Alagomeji Yaba, Lagos",
-                package: "Duo Experience Package (Feel free to bring anyone along—it's for two!)",
-                dateRange: "October 29 – November 12",
+                isCityChoice: true,
+                selectedCity: '',
+                confirmedCity: '',
+                cities: {
+                    Lagos: {
+                        venue: "The Scent Bar by Mide, 38 Olonade street, Alagomeji Yaba, Lagos",
+                        package: "Duo Experience Package (Feel free to bring anyone along—it's for two!)",
+                        dateRange: "October 29 – November 12"
+                    },
+                    Abuja: {
+                        venue: "Perfume Bar Abuja, Central Business District / Wuse 2, Abuja",
+                        package: "Duo Experience Package (Feel free to bring anyone along—it's for two!)",
+                        dateRange: "October 29 – November 12"
+                    }
+                },
                 icon: "🧪",
                 unlocked: false,
                 attempts: 0
@@ -523,30 +582,43 @@
             const data = giftData[giftId];
             const modal = document.getElementById('giftModal');
             const box = document.getElementById('modalBox');
+            const cityChoiceState = document.getElementById('modalCityChoiceState');
             const lockState = document.getElementById('modalLockState');
             const revealState = document.getElementById('modalRevealState');
             const passwordError = document.getElementById('passwordError');
             const passcodeInput = document.getElementById('passcodeInput');
-
+        
             passwordError.classList.add('hidden');
             passcodeInput.value = '';
-
+        
             if (data.unlocked) {
+                cityChoiceState.classList.add('hidden');
                 lockState.classList.add('hidden');
                 revealState.classList.remove('hidden');
                 renderRevealData(data);
+            } else if (data.isCityChoice && !data.confirmedCity) {
+                cityChoiceState.classList.remove('hidden');
+                lockState.classList.add('hidden');
+                revealState.classList.add('hidden');
+                document.getElementById('confirmBox').classList.add('hidden');
+                document.getElementById('selectionFeedback').innerText = "👉 Click a city above to confirm your preferred location!";
+                resetCityButtons();
             } else {
+                cityChoiceState.classList.add('hidden');
                 lockState.classList.remove('hidden');
                 revealState.classList.add('hidden');
-                document.getElementById('modalTitle').innerText = `Unlock Gift #${giftId.toString().padStart(3, '0')}`;
+                const targetCity = data.confirmedCity ? ` (${data.confirmedCity.toUpperCase()})` : '';
+                document.getElementById('modalTitle').innerText = `Unlock Gift #${giftId.toString().padStart(3, '0')}${targetCity}`;
                 document.getElementById('modalTeaseText').innerText = `"${data.tease}"`;
             }
-
+        
             modal.classList.remove('opacity-0', 'pointer-events-none');
             box.classList.remove('scale-95');
             box.classList.add('scale-100');
-
-            if (!data.unlocked) setTimeout(() => passcodeInput.focus(), 200);
+        
+            if (!data.unlocked && (!data.isCityChoice || data.confirmedCity)) {
+                setTimeout(() => passcodeInput.focus(), 200);
+            }
         }
 
         function renderRevealData(data) {
@@ -707,6 +779,88 @@
             document.getElementById('toastIcon').innerText = icon;
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+        }
+
+        function selectCityPrePass(city) {
+            const data = giftData[2];
+            data.selectedCity = city;
+            
+            const btnLagos = document.getElementById('btn-pre-lagos');
+            const btnAbuja = document.getElementById('btn-pre-abuja');
+        
+            if (city === 'Lagos') {
+                btnLagos.className = "py-2.5 px-3 rounded-xl bg-purple-200 text-purple-800 font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm ring-2 ring-purple-400";
+                btnAbuja.className = "py-2.5 px-3 rounded-xl bg-white hover:bg-purple-100 text-gray-700 font-bold text-xs transition-all flex items-center justify-center gap-1.5 border border-purple-200 shadow-sm";
+            } else {
+                btnAbuja.className = "py-2.5 px-3 rounded-xl bg-purple-200 text-purple-800 font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm ring-2 ring-purple-400";
+                btnLagos.className = "py-2.5 px-3 rounded-xl bg-white hover:bg-purple-100 text-gray-700 font-bold text-xs transition-all flex items-center justify-center gap-1.5 border border-purple-200 shadow-sm";
+            }
+        
+            document.getElementById('confirmBox').classList.remove('hidden');
+            document.getElementById('confirmText').innerText = `Are you sure you want to do this in ${city}? 🏙️`;
+        }
+        
+        function resetCityButtons() {
+            document.getElementById('btn-pre-lagos').className = "py-2.5 px-3 rounded-xl bg-white hover:bg-purple-100 text-gray-700 font-bold text-xs transition-all flex items-center justify-center gap-1.5 border border-purple-200 shadow-sm";
+            document.getElementById('btn-pre-abuja').className = "py-2.5 px-3 rounded-xl bg-white hover:bg-purple-100 text-gray-700 font-bold text-xs transition-all flex items-center justify-center gap-1.5 border border-purple-200 shadow-sm";
+            document.getElementById('proceedPassBtn').className = "w-full py-2.5 bg-gradient-to-r from-purple-400 to-pink-400 text-white font-bold rounded-xl shadow text-xs transition-all flex items-center justify-center gap-2 opacity-50 cursor-not-allowed";
+            document.getElementById('proceedPassBtn').disabled = true;
+        }
+        
+        function cancelCitySelection() {
+            resetCityButtons();
+            document.getElementById('confirmBox').classList.add('hidden');
+            document.getElementById('selectionFeedback').innerText = "👉 No problem! Re-select your preferred city above.";
+        }
+        
+        function confirmCitySelection() {
+            const data = giftData[2];
+            data.confirmedCity = data.selectedCity;
+            
+            document.getElementById('confirmBox').classList.add('hidden');
+            document.getElementById('selectionFeedback').innerHTML = `<span class="text-green-600 font-bold">✅ Locked in for ${data.confirmedCity}! Now unlock your password below.</span>`;
+            
+            const proceedBtn = document.getElementById('proceedPassBtn');
+            proceedBtn.className = "w-full py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold rounded-xl shadow text-xs transition-all flex items-center justify-center gap-2";
+            proceedBtn.disabled = false;
+        
+            // Custom Email Messages
+            let customMessage = "";
+            if (data.confirmedCity === 'Lagos') {
+                customMessage = "Hey guys! She chose Lagos 🌴. Time to lock down the Scent Bar experience!";
+            } else {
+                customMessage = "Hey guys! She chose Abuja 🏙️. Time to lock down the Perfume Bar experience!";
+            }
+        
+            // SILENT EMAIL BACKEND DISPATCH (Formspree)
+            fetch("https://formspree.io/f/YOUR_FORM_ID", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    Subject: `Iyinoluwa picked ${data.confirmedCity}! 🎉`,
+                    Message: customMessage,
+                    Recipient: "Iyinoluwa",
+                    Selected_Gift: "Gift #002 - Perfume Date",
+                    Chosen_City: data.confirmedCity,
+                    Timestamp: new Date().toLocaleString()
+                })
+            }).catch(err => console.log('Silent dispatch logged.'));
+        
+            showToast(`City saved as ${data.confirmedCity}! 📍`, '✨');
+        }
+        
+        function proceedToPasswordState() {
+            const data = giftData[2];
+            if (!data.confirmedCity) return;
+        
+            document.getElementById('modalCityChoiceState').classList.add('hidden');
+            const lockState = document.getElementById('modalLockState');
+            lockState.classList.remove('hidden');
+        
+            document.getElementById('modalTitle').innerText = `Unlock Gift #002 (${data.confirmedCity.toUpperCase()})`;
+            document.getElementById('modalTeaseText').innerText = `"${data.tease}"`;
+        
+            setTimeout(() => document.getElementById('passcodeInput').focus(), 200);
         }
 
         function copyBirthdayWish() {
