@@ -628,15 +628,28 @@ Wishing you a beautiful year filled with love, laughter, and answered prayers. H
             document.getElementById('revealIcon').innerText = data.icon;
             document.getElementById('revealTitle').innerText = data.title;
             document.getElementById('revealDescription').innerText = data.description;
-
+        
             const venueBox = document.getElementById('venueBox');
             const packageRow = document.getElementById('packageInfoRow');
-
-            if (data.venue) {
-                venueBox.classList.remove('hidden');
+        
+            venueBox.classList.remove('hidden');
+        
+            if (data.isCityChoice) {
+                const activeCity = data.confirmedCity || data.selectedCity || 'Lagos';
+                const cityData = data.cities[activeCity];
+                document.getElementById('venueLocation').innerText = cityData.venue;
+                document.getElementById('venueDateRange').innerText = cityData.dateRange;
+                
+                if (cityData.package) {
+                    packageRow.classList.remove('hidden');
+                    document.getElementById('packageDetails').innerText = cityData.package;
+                } else {
+                    packageRow.classList.add('hidden');
+                }
+            } else if (data.venue) {
                 document.getElementById('venueLocation').innerText = data.venue;
                 document.getElementById('venueDateRange').innerText = data.dateRange;
-
+        
                 if (data.package) {
                     packageRow.classList.remove('hidden');
                     document.getElementById('packageDetails').innerText = data.package;
