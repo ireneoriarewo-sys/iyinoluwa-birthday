@@ -501,7 +501,8 @@ Wishing you a beautiful year filled with love, laughter, and answered prayers. H
                 attempts: 0
             },
             2: {
-                passcode: "002",
+                passcodeLagos: "002L", // Or whatever password you want for Lagos
+                passcodeAbuja: "002A",  // Or whatever password you want for Abuja
                 tease: "You strictly banned this gift because you’re too picky… but we promised you’d get one whether you liked it or not.",
                 title: "DIY Perfume Creation Date 🧪🌸✨",
                 description: "You made sure to warn everyone: 'Please don’t buy me perfume, I’m way too picky!' 😤 And remember how we kept saying we’d buy you one anyway and you’d have no choice but to love it? Well, here’s the plot twist... You’re making it yourself! We booked a perfume date so you can mix, match, and create your exact signature scent.",
@@ -673,21 +674,28 @@ Wishing you a beautiful year filled with love, laughter, and answered prayers. H
             const input = document.getElementById('passcodeInput').value.trim();
             const data = giftData[currentActiveModalGift];
             const passwordError = document.getElementById('passwordError');
-
-            if (input === data.passcode) {
+        
+            // Determine the correct passcode depending on the gift and selected city
+            let correctPass = data.passcode;
+            if (currentActiveModalGift === 2) {
+                correctPass = (data.confirmedCity === 'Abuja') ? data.passcodeAbuja : data.passcodeLagos;
+            }
+        
+            if (input === correctPass) {
                 data.unlocked = true;
                 playSuccessSound();
                 triggerConfetti();
                 updateGiftUI(currentActiveModalGift);
                 renderRevealData(data);
-
+        
+                document.getElementById('modalCityChoiceState').classList.add('hidden');
                 document.getElementById('modalLockState').classList.add('hidden');
                 document.getElementById('modalRevealState').classList.remove('hidden');
                 showToast(`Gift #${currentActiveModalGift.toString().padStart(3, '0')} Unlocked! 🎉`, '✨');
             } else {
                 data.attempts += 1;
                 passwordError.classList.remove('hidden');
-
+        
                 if (data.attempts >= 3) {
                     passwordError.innerText = "Nice try! 😜 Ask us for help or something like that";
                 } else if (data.attempts === 2) {
